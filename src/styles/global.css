@@ -75,6 +75,13 @@ body {
   visibility: hidden;
   pointer-events: none;
 }
+/* lock all scrolling while the landing is up so the experience starts at the top */
+html.pl-locked,
+html.pl-locked body {
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: none;
+}
 #pl-canvas {
   position: absolute;
   inset: 0;

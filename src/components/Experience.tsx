@@ -23,21 +23,12 @@ export default function Experience() {
     return () => window.removeEventListener("audio:set", h as EventListener);
   }, [setAudioOn]);
 
-  // tell the static preloader the experience is mounted and interactive,
-  // then honor any deep-link hash (e.g. /#trulla) once content exists
+  // tell the static preloader the experience is mounted and interactive
   useEffect(() => {
     const id = requestAnimationFrame(() =>
       window.dispatchEvent(new Event("experience:ready")),
     );
-    const hash = decodeURIComponent(window.location.hash.replace("#", ""));
-    let to: ReturnType<typeof setTimeout> | undefined;
-    if (hash) {
-      to = setTimeout(() => useStore.getState().scrollToId(hash), 900);
-    }
-    return () => {
-      cancelAnimationFrame(id);
-      if (to) clearTimeout(to);
-    };
+    return () => cancelAnimationFrame(id);
   }, []);
 
   // smooth scroll + progress
@@ -45,6 +36,9 @@ export default function Experience() {
     // debug aid: ?scroll=0.2 pins the camera at a fixed point on the journey
     const pin = new URLSearchParams(window.location.search).get("scroll");
     const lenis = new Lenis({ duration: 1.1, smoothWheel: true });
+    // stay frozen until the user hits Enter, so landing scroll never leaks in
+    lenis.stop();
+
     let raf = 0;
     const loop = (t: number) => {
       lenis.raf(t);
@@ -66,7 +60,25 @@ export default function Experience() {
       if (el) lenis.scrollTo(el, { offset: 0, duration: 1.2 });
     });
 
+    // on Enter: resume scrolling and start at the top (or a deep-link hash)
+    const onStart = () => {
+      lenis.start();
+      if (pin !== null) return; // debug pin keeps its fixed camera position
+      const hash = decodeURIComponent(window.location.hash.replace("#", ""));
+      const el = hash ? document.getElementById(hash) : null;
+      requestAnimationFrame(() => {
+        if (el) {
+          lenis.scrollTo(el, { immediate: true });
+        } else {
+          lenis.scrollTo(0, { immediate: true });
+          setScroll(0);
+        }
+      });
+    };
+    window.addEventListener("experience:start", onStart);
+
     return () => {
+      window.removeEventListener("experience:start", onStart);
       cancelAnimationFrame(raf);
       lenis.destroy();
     };

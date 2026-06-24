@@ -39,6 +39,8 @@ import { identity } from "../data/site";
   (() => {
     const pre = document.getElementById("preloader");
     if (!pre) return;
+    // freeze the page behind the landing so scrolling can't carry into the experience
+    document.documentElement.classList.add("pl-locked");
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const odo = pre.querySelector(".odometer");
     const bar = pre.querySelector(".pl-bar > i");
@@ -216,6 +218,7 @@ import { identity } from "../data/site";
       if (gone) return;
       gone = true;
       cancelAnimationFrame(raf);
+      document.documentElement.classList.remove("pl-locked");
       pre.classList.add("is-leaving");
       window.dispatchEvent(new Event("experience:start"));
       setTimeout(() => pre.remove(), 1000);
