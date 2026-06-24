@@ -6,6 +6,8 @@ import { identity, projects, skillGroups, experience } from "../data/site";
 
 const title = `${identity.name} — ${identity.role}`;
 const description = identity.tagline;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const faviconHref = `${base}/favicon.svg`;
 ---
 
 <!doctype html>
@@ -16,7 +18,7 @@ const description = identity.tagline;
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href={faviconHref} />
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="author" content={identity.name} />
