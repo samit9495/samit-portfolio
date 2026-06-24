@@ -3,7 +3,7 @@ import react from "@astrojs/react";
 
 // Deployed to Cloudflare Pages, served at the domain root.
 export default defineConfig({
-  site: "https://samit.pages.dev",
+  site: "https://samitpawar.pages.dev",
   integrations: [react()],
   vite: {
     ssr: {
