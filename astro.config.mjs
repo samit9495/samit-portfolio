@@ -1,10 +1,9 @@
 import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 
-// Served from https://samit9495.github.io/samit-portfolio/ via GitHub Pages.
+// Deployed to Cloudflare Pages, served at the domain root.
 export default defineConfig({
-  site: "https://samit9495.github.io",
-  base: "/samit-portfolio",
+  site: "https://samit.pages.dev",
   integrations: [react()],
   vite: {
     ssr: {
