@@ -48,7 +48,7 @@ const faviconHref = `${base}/favicon.svg`;
         jobTitle: identity.role,
         email: identity.email,
         url: identity.linkedin,
-        sameAs: [identity.github, `https://${identity.linkedin}`],
+        sameAs: [identity.github, identity.linkedin],
         address: identity.location,
         description: identity.bio,
       })}
@@ -101,7 +101,7 @@ const faviconHref = `${base}/favicon.svg`;
       <p>
         Contact: <a href={`mailto:${identity.email}`}>{identity.email}</a> ·{" "}
         <a href={identity.github}>GitHub</a> ·{" "}
-        <a href={`https://${identity.linkedin}`}>LinkedIn</a>
+        <a href={identity.linkedin}>LinkedIn</a>
       </p>
     </main>
   </body>

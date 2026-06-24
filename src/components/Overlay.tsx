@@ -351,7 +351,7 @@ export function Overlay() {
           </a>
           <a
             className="btn"
-            href={`https://${identity.linkedin}`}
+            href={identity.linkedin}
             target="_blank"
             rel="noreferrer"
           >
