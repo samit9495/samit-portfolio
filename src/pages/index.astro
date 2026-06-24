@@ -1,0 +1,106 @@
+---
+import "../styles/global.css";
+import Preloader from "../components/Preloader.astro";
+import Experience from "../components/Experience.tsx";
+import { identity, projects, skillGroups, experience } from "../data/site";
+
+const title = `${identity.name} — ${identity.role}`;
+const description = identity.tagline;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content={identity.name} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Zen+Dots&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- JSON-LD for rich crawlability -->
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Person",
+        name: identity.name,
+        jobTitle: identity.role,
+        email: identity.email,
+        url: identity.linkedin,
+        sameAs: [identity.github, `https://${identity.linkedin}`],
+        address: identity.location,
+        description: identity.bio,
+      })}
+    />
+  </head>
+  <body>
+    <Preloader />
+
+    <!-- The full WebGL experience (client-only: needs WebGL/DOM) -->
+    <Experience client:only="react" />
+
+    <!-- SSR content for SEO / no-JS crawlers (visually hidden) -->
+    <main class="seo-only">
+      <h1>{identity.name} — {identity.roleLong}</h1>
+      <p>{identity.bio}</p>
+      <h2>Projects</h2>
+      <ul>
+        {
+          projects.map((p) => (
+            <li>
+              <strong>
+                {p.title} — {p.subtitle}
+              </strong>{" "}
+              ({p.year}). {p.description} Stack: {p.stack.join(", ")}. Outcome:{" "}
+              {p.outcome}
+            </li>
+          ))
+        }
+      </ul>
+      <h2>Skills</h2>
+      <ul>
+        {
+          skillGroups.map((g) => (
+            <li>
+              {g.label}: {g.items.join(", ")}
+            </li>
+          ))
+        }
+      </ul>
+      <h2>Experience</h2>
+      <ul>
+        {
+          experience.map((e) => (
+            <li>
+              {e.title} at {e.company} ({e.dates}) — {e.summary}
+            </li>
+          ))
+        }
+      </ul>
+      <p>
+        Contact: <a href={`mailto:${identity.email}`}>{identity.email}</a> ·{" "}
+        <a href={identity.github}>GitHub</a> ·{" "}
+        <a href={`https://${identity.linkedin}`}>LinkedIn</a>
+      </p>
+    </main>
+  </body>
+</html>
