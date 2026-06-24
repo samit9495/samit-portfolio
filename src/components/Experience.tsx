@@ -13,7 +13,15 @@ export default function Experience() {
   const setActive = useStore((s) => s.setActive);
   const setPanel = useStore((s) => s.setPanel);
   const setScrollToId = useStore((s) => s.setScrollToId);
+  const setAudioOn = useStore((s) => s.setAudioOn);
   useAudio();
+
+  // the static landing's sound toggle talks to the store via this event
+  useEffect(() => {
+    const h = (e: Event) => setAudioOn(!!(e as CustomEvent).detail);
+    window.addEventListener("audio:set", h as EventListener);
+    return () => window.removeEventListener("audio:set", h as EventListener);
+  }, [setAudioOn]);
 
   // tell the static preloader the experience is mounted and interactive,
   // then honor any deep-link hash (e.g. /#trulla) once content exists

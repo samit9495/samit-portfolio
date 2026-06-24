@@ -1,35 +1,197 @@
 ---
-import { projects } from "../data/site";
+import { identity } from "../data/site";
 ---
 
-<div id="preloader" data-count={projects.length}>
-  <div class="odometer">000</div>
-  <div class="pl-label">Initializing experience</div>
-  <div class="pl-bar"><i></i></div>
-  <button class="button-start" type="button">Enter</button>
+<div id="preloader">
+  <canvas id="pl-canvas"></canvas>
+  <div class="pl-inner">
+    <div class="pl-top">
+      <span>PORTFOLIO_OS</span>
+      <span class="pl-ver">BOOT v1.0</span>
+    </div>
+    <div class="pl-mono">SP<b>.</b></div>
+    <h1 class="pl-name" data-text={identity.name.toUpperCase()}>
+      {identity.name.toUpperCase()}
+    </h1>
+    <div class="pl-role">AI ENGINEER // SENIOR PYTHON DEVELOPER</div>
+    <ul class="pl-log" aria-hidden="true"></ul>
+    <div class="pl-meter">
+      <div class="pl-bar"><i></i></div>
+      <div class="pl-pct"><span class="odometer">0</span><em>%</em></div>
+    </div>
+    <button class="button-start" type="button"><span>Enter</span></button>
+    <div class="pl-hint">Press <kbd>Enter</kbd> · best experienced with sound on</div>
+  </div>
+
+  <button
+    class="audio-toggle"
+    id="pl-audio"
+    type="button"
+    aria-pressed="false"
+    aria-label="Toggle ambient sound"
+  >
+    <span class="bars"><i></i><i></i><i></i><i></i></span>
+    <span class="pl-audio-label">Sound off</span>
+  </button>
 </div>
 
 <script is:inline>
   (() => {
     const pre = document.getElementById("preloader");
     if (!pre) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const odo = pre.querySelector(".odometer");
     const bar = pre.querySelector(".pl-bar > i");
-    const label = pre.querySelector(".pl-label");
-    const start = pre.querySelector(".button-start");
+    const logEl = pre.querySelector(".pl-log");
+    const nameEl = pre.querySelector(".pl-name");
+    const startBtn = pre.querySelector(".button-start");
 
+    // ---------- interactive neural constellation ----------
+    const canvas = document.getElementById("pl-canvas");
+    const ctx = canvas && canvas.getContext("2d");
+    const COLORS = ["#4f9dff", "#9b6bff", "#2de2a6", "#7df9ff"];
+    const mouse = { x: -9999, y: -9999 };
+    let nodes = [];
+    let W = 0, H = 0, DPR = 1, raf = 0;
+
+    function resize() {
+      DPR = Math.min(window.devicePixelRatio || 1, 2);
+      W = canvas.width = window.innerWidth * DPR;
+      H = canvas.height = window.innerHeight * DPR;
+      canvas.style.width = window.innerWidth + "px";
+      canvas.style.height = window.innerHeight + "px";
+    }
+    function seed() {
+      const n = Math.min(90, Math.max(36, Math.floor(window.innerWidth / 16)));
+      nodes = Array.from({ length: n }, () => ({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.18 * DPR,
+        vy: (Math.random() - 0.5) * 0.18 * DPR,
+        c: COLORS[(Math.random() * COLORS.length) | 0],
+      }));
+    }
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      const maxD = 140 * DPR;
+      const mMax = 190 * DPR;
+      for (const p of nodes) {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0 || p.x > W) p.vx *= -1;
+        if (p.y < 0 || p.y > H) p.vy *= -1;
+      }
+      for (let i = 0; i < nodes.length; i++) {
+        const a = nodes[i];
+        for (let j = i + 1; j < nodes.length; j++) {
+          const b = nodes[j];
+          const dx = a.x - b.x, dy = a.y - b.y;
+          const d = Math.hypot(dx, dy);
+          if (d < maxD) {
+            ctx.globalAlpha = (1 - d / maxD) * 0.32;
+            ctx.strokeStyle = a.c;
+            ctx.lineWidth = DPR;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+        const mdx = a.x - mouse.x * DPR, mdy = a.y - mouse.y * DPR;
+        const md = Math.hypot(mdx, mdy);
+        if (md < mMax) {
+          ctx.globalAlpha = (1 - md / mMax) * 0.55;
+          ctx.strokeStyle = a.c;
+          ctx.lineWidth = DPR;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(mouse.x * DPR, mouse.y * DPR);
+          ctx.stroke();
+          // subtle pull toward cursor
+          a.vx += (mdx > 0 ? -1 : 1) * 0.0006 * DPR;
+          a.vy += (mdy > 0 ? -1 : 1) * 0.0006 * DPR;
+        }
+      }
+      ctx.globalAlpha = 1;
+      for (const p of nodes) {
+        ctx.fillStyle = p.c;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1.5 * DPR, 0, 7);
+        ctx.fill();
+      }
+      raf = requestAnimationFrame(draw);
+    }
+    if (ctx) {
+      resize();
+      seed();
+      if (reduce) draw(), cancelAnimationFrame(raf); // single static frame
+      else draw();
+      window.addEventListener("mousemove", (e) => {
+        mouse.x = e.clientX; mouse.y = e.clientY;
+      });
+      window.addEventListener("resize", () => { resize(); seed(); });
+    }
+
+    // ---------- name decode / scramble ----------
+    if (nameEl && !reduce) {
+      const target = nameEl.dataset.text || nameEl.textContent.trim();
+      const glyphs = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#%&/<>_01";
+      const settle = target
+        .split("")
+        .map((c, i) => (c === " " ? 0 : 5 + i * 2 + ((Math.random() * 5) | 0)));
+      let frame = 0;
+      const step = () => {
+        let out = "", done = true;
+        for (let i = 0; i < target.length; i++) {
+          if (target[i] === " ") { out += " "; continue; }
+          if (frame >= settle[i]) out += target[i];
+          else { done = false; out += glyphs[(Math.random() * glyphs.length) | 0]; }
+        }
+        nameEl.textContent = out;
+        frame++;
+        if (!done) setTimeout(step, 45);
+      };
+      step();
+    }
+
+    // ---------- boot log tied to progress ----------
+    const LINES = [
+      ["booting portfolio runtime", 6],
+      ["loading project manifest", 20],
+      ["compiling GLSL shaders", 38],
+      ["spawning 7 project worlds", 56],
+      ["calibrating camera rig", 72],
+      ["wiring audio analyser", 86],
+      ["systems nominal", 100],
+    ];
+    let logShown = 0;
+    function updateLog(v) {
+      while (logShown < LINES.length && v >= LINES[logShown][1]) {
+        const [txt] = LINES[logShown];
+        const last = logShown === LINES.length - 1;
+        const li = document.createElement("li");
+        li.innerHTML =
+          '<span class="ok">\u25B8</span> ' + txt +
+          (last ? ' <span class="ok">[ok]</span>' : " \u2026");
+        logEl.appendChild(li);
+        requestAnimationFrame(() => li.classList.add("on"));
+        while (logEl.children.length > 6) logEl.removeChild(logEl.firstChild);
+        logShown++;
+      }
+    }
+
+    // ---------- progress ----------
     let p = 0;
     let ready = false;
     const render = () => {
       const v = Math.min(100, Math.round(p));
-      if (odo) odo.textContent = String(v).padStart(3, "0");
+      if (odo) odo.textContent = String(v);
       if (bar) bar.style.width = v + "%";
+      updateLog(v);
     };
 
-    // ramp toward 90 while the heavy island loads, then finish on ready
     const tick = setInterval(() => {
       const ceiling = ready ? 100 : 90;
-      p += (ceiling - p) * 0.08 + 0.4;
+      p += (ceiling - p) * 0.08 + 0.5;
       if (p >= ceiling) p = ceiling;
       render();
       if (ready && p >= 99.5) {
@@ -37,24 +199,55 @@ import { projects } from "../data/site";
         p = 100;
         render();
         pre.classList.add("is-ready");
-        if (label) label.textContent = "Ready";
       }
     }, 40);
 
+    // ---------- enter / dismiss ----------
     const skip = new URLSearchParams(location.search).has("skipintro");
     const onReady = () => {
       ready = true;
-      if (skip) setTimeout(() => dismiss(), 400);
+      if (skip) setTimeout(dismiss, 300);
     };
     window.addEventListener("experience:ready", onReady, { once: true });
-    // fallback so the button always appears even if hydration is slow
-    setTimeout(onReady, 6000);
+    setTimeout(onReady, 6000); // fallback if hydration is slow
 
+    let gone = false;
     function dismiss() {
+      if (gone) return;
+      gone = true;
+      cancelAnimationFrame(raf);
       pre.classList.add("is-leaving");
       window.dispatchEvent(new Event("experience:start"));
-      setTimeout(() => pre.remove(), 1100);
+      setTimeout(() => pre.remove(), 1000);
     }
-    start?.addEventListener("click", dismiss);
+    startBtn?.addEventListener("click", dismiss);
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && pre.classList.contains("is-ready")) {
+        e.preventDefault();
+        dismiss();
+      }
+    });
+
+    // ---------- sound toggle (shared with the experience) ----------
+    const audioBtn = document.getElementById("pl-audio");
+    const audioLabel = audioBtn && audioBtn.querySelector(".pl-audio-label");
+    let audioOn = (() => {
+      try { return sessionStorage.getItem("audioPref") === "1"; } catch { return false; }
+    })();
+    const reflectAudio = () => {
+      if (!audioBtn) return;
+      audioBtn.classList.toggle("on", audioOn);
+      audioBtn.setAttribute("aria-pressed", String(audioOn));
+      if (audioLabel) audioLabel.textContent = audioOn ? "Sound on" : "Sound off";
+    };
+    reflectAudio();
+    audioBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      audioOn = !audioOn;
+      try { sessionStorage.setItem("audioPref", audioOn ? "1" : "0"); } catch {}
+      reflectAudio();
+      // the hydrated experience listens for this and starts/stops the audio
+      window.dispatchEvent(new CustomEvent("audio:set", { detail: audioOn }));
+    });
   })();
 </script>

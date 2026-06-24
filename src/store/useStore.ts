@@ -1,5 +1,22 @@
 import { create } from "zustand";
 
+// Sound preference is shared with the static landing toggle via sessionStorage,
+// so a choice made on the preloader carries into the experience.
+const readAudioPref = (): boolean => {
+  try {
+    return typeof window !== "undefined" && sessionStorage.getItem("audioPref") === "1";
+  } catch {
+    return false;
+  }
+};
+const writeAudioPref = (v: boolean) => {
+  try {
+    sessionStorage.setItem("audioPref", v ? "1" : "0");
+  } catch {
+    /* storage unavailable */
+  }
+};
+
 type State = {
   started: boolean;
   progress: number;
@@ -31,7 +48,7 @@ export const useStore = create<State>((set) => ({
   active: 0,
   panel: 0,
   audioLevel: 0,
-  audioOn: false,
+  audioOn: readAudioPref(),
   scrollToId: (id) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }),
   setScrollToId: (fn) => set({ scrollToId: fn }),
   setStarted: (v) => set({ started: v }),
@@ -40,5 +57,8 @@ export const useStore = create<State>((set) => ({
   setActive: (v) => set((s) => (s.active === v ? s : { active: v })),
   setPanel: (v) => set((s) => (s.panel === v ? s : { panel: v })),
   setAudioLevel: (v) => set({ audioLevel: v }),
-  setAudioOn: (v) => set({ audioOn: v }),
+  setAudioOn: (v) => {
+    writeAudioPref(v);
+    set({ audioOn: v });
+  },
 }));
