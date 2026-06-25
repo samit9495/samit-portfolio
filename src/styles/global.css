@@ -267,10 +267,65 @@ html.pl-locked body {
   align-items: center;
   padding: 8svh clamp(1.4rem, 6vw, 7rem);
 }
+/* readability scrim: darkens behind text so accent-colored copy never blends
+   into a same-colored 3D chapter, while keeping the 3D visible elsewhere */
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgba(5, 6, 11, 0.85) 0%,
+    rgba(5, 6, 11, 0.55) 42%,
+    rgba(5, 6, 11, 0) 80%
+  );
+}
+/* projects put text on both side columns; keep the centre clear for the model */
+.panel.project-panel::before {
+  background: linear-gradient(
+    90deg,
+    rgba(5, 6, 11, 0.9) 0%,
+    rgba(5, 6, 11, 0.55) 26%,
+    rgba(5, 6, 11, 0) 47%,
+    rgba(5, 6, 11, 0) 53%,
+    rgba(5, 6, 11, 0.55) 74%,
+    rgba(5, 6, 11, 0.9) 100%
+  );
+}
+/* contact text is centred */
+.panel.contact::before {
+  background: radial-gradient(
+    ellipse 80% 85% at 50% 50%,
+    rgba(5, 6, 11, 0.82) 0%,
+    rgba(5, 6, 11, 0.45) 45%,
+    rgba(5, 6, 11, 0) 80%
+  );
+}
 .wrap {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
+}
+/* extra legibility safety net over bright/bloomed geometry */
+.hero h1,
+.project h2,
+.contact h2 {
+  text-shadow: 0 2px 26px rgba(0, 0, 0, 0.5);
+}
+.hero .role,
+.hero .tagline,
+.project .psub,
+.project .desc,
+.eyebrow,
+.timeline h3,
+.tl-item p,
+.stat .l,
+.skill-card li {
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.55);
 }
 .eyebrow {
   font-family: "JetBrains Mono", monospace;
@@ -679,6 +734,14 @@ html.pl-locked body {
   .project .pindex { display: none; }
   .stats { grid-template-columns: repeat(2, 1fr); }
   .dots { display: none; }
+  /* single column on mobile: use a uniform scrim instead of side columns */
+  .panel.project-panel::before {
+    background: linear-gradient(
+      180deg,
+      rgba(5, 6, 11, 0.62) 0%,
+      rgba(5, 6, 11, 0.78) 100%
+    );
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
